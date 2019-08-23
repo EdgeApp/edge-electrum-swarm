@@ -1,0 +1,36 @@
+
+A tool for managing multiple ElectrumX servers
+with various settings (Coins, Ports, Coin forks, etc...)
+using very simple and minimal configuration files
+
+Usage: electrum-swarm [OPTIONS] COMMAND [COIN ...]
+
+COIN - An optional list of Coins Names (case insensitive)
+       Use 'all' to select all the coins in 'coins.conf'
+
+Options:
+      --all                Select all Coins
+      --config string      Location of custom config files
+                           Defaults to "./shared.conf"
+      --debug              Enable debug mode
+      --help               Displays this text
+
+Commands:
+  install   - If needed, Install docker, download all the docker images
+              and create the Host's persistent data folders
+  run       - Starts the servers (Runs install if needed)
+  stop      - Stops the servers without deleting the containers
+  remove    - Removes the servers containers
+  compact   - Compacts the Electrumx's database to reduce it's size
+              in order to avoiding overflows. Be aware that it might
+              take a few hours, and that during that time the
+              ElectrumX server won't be availble
+  ping      - Checks if the Electrumx's TCP connection is alive
+  print     - Prints the settings (Shared and Coin)
+  help      - Displays this text
+
+Examples:
+  1. 'electrum-swarm stop Dogecoin'
+  2. 'electrum-swarm --config ./settings.conf run Dogecoin Vertcoin'
+  3. 'electrum-swarm --all --config ./settings.conf ping'
+  4. 'electrum-swarm print all'

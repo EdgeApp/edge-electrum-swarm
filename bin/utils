@@ -1,0 +1,135 @@
+#!/bin/bash
+
+###########################################################
+############### Private Utility Functions #################
+###########################################################
+
+swarmCommand() {
+  local availableCommands=$1
+  ### Set the command and shift the array
+  local command="${ARGS[0]}"
+  ### Shift one item
+  ARGS=("${ARGS[@]:1}")
+  ### Get the Coins List
+  local userCoins="${ARGS[@]}"
+  ### Exit if the command asked by the user is invalid
+  swarmValidInput "$command" "$availableCommands" "wrong command"
+  ### Exit early when asking for 'help'
+  if [ "$command" == "help" ]; then
+    cat man.txt
+    exit 0
+  fi
+  ### Set the shared environment variables
+  . $SHARED_SETTINGS_PATH
+  ### Exit if we are missing the Coins config file
+  if [ ! -f "$COINS_CONFIG_PATH" ]; then
+    swarmError $COINS_CONFIG_PATH "missing coins config file"
+  fi
+
+  ### Load the Coins settings
+  local coinsSettings=$(grep -Ev "^#|^$" "$COINS_CONFIG_PATH" | tr -d ",")
+  ### Get all the Coins Names that are supported
+  local allCoins=$(echo "$coinsSettings" | awk '{print $2}')
+  ### Set all Coins as the default
+  local selectedCoins=""
+
+  ### If the user input is 'all', select all coins
+  if [ "$userCoins" == "all" ]; then
+    selectedCoins="$allCoins"
+  elif [ ! -z "$userCoins" ]; then
+    allCoins=$(echo "$allCoins" | awk '{print tolower($0)}')
+    ### Parse the Coins List input into an Array
+    selectedCoins=$(tr ' ' '\n' <<< "$userCoins")
+    ### Exit if any of the Coins asked by the user is invalid
+    while read -r coin; do
+      coin=$(echo "$coin" | awk '{print tolower($0)}')
+      local isValid=$(echo "$allCoins" | grep -w "$coin")
+      ### Exit if the settings for a coin is missing
+      if [ -z "$isValid" ]; then
+        swarmError $coin "Missing Coin settings for this coin"
+      fi
+    done <<< "$selectedCoins"
+  else
+    swarmError $userCoins "Must supply Coins names or select 'all'"
+  fi
+
+  ## Looping over all of the selected Coins
+  while read -r coin; do
+    ### Reset the shared environment variables
+    . $SHARED_SETTINGS_PATH
+    ### Get the coin's settings
+    local settings=$(grep "$coin" <<< "$coinsSettings")
+    ### Set the coin's environment variables
+    swarmSetEnvironment "$settings"
+    ### Run the command asked by user
+    "$command"
+  done <<< "$selectedCoins"
+}
+
+swarmOption() {
+  local availableOptions=$1
+  while [ $(echo "${ARGS[0]}" | grep '-') ]; do
+    local option="${ARGS[0]}"
+    swarmValidInput "$option" "$availableOptions" "wrong option"
+    $(echo $option | tr -d '-')
+  done
+}
+
+swarmValidInput() {
+  local input=$(echo $1 | tr -d '-')
+  local validInputs=$(echo "$2" | grep - | awk '{print $1}')
+  ### Exit if 'input' is not one of the availble options
+  local isValid=$(echo "$validInputs" | grep -w $input)
+  if [ -z "$input" ] || [ -z "$isValid" ]; then
+    swarmError $input "$3"
+  fi
+}
+
+swarmError() {
+  echo "$(echo electrum-swarm: $1: $2)"
+  echo "See 'electrum-swarm help'"
+  exit 2
+}
+
+swarmSetEnvironment() {
+  ### Format the arguments to an array
+  local coinSettings=($(echo $* | tr "," " "))
+
+  ### Set the variables
+  PORT_OFFSET="${coinSettings[0]}"
+  COIN="${coinSettings[1]}"
+  COIND_IMAGE_NAME="${coinSettings[2]}"
+  COIND_IMAGE_BIN="${coinSettings[3]}"
+  COIND_IMAGE_DATA_DIR="${coinSettings[4]}"
+  NETWORK_PORT="${coinSettings[5]}"
+  RPC_PORT="${coinSettings[6]}"
+  CUSTOM_SCRIPT_PATH="${coinSettings[7]}"
+
+  ### Get the Coin's name in lowercase
+  COIN_NAME=$(echo $COIN | awk '{print tolower($0)}')
+
+  ### Check for an existing custom script if an explicit one wasn't specified
+  if [ -z "$CUSTOM_SCRIPT_PATH"     ] && \
+    [ -d "$CUSTOM_SCRIPTS_FOLDER"         ] && \
+    [ -f "$CUSTOM_SCRIPTS_FOLDER/$COIN_NAME.sh" ]; then
+    CUSTOM_SCRIPT_PATH="$CUSTOM_SCRIPTS_FOLDER/$COIN_NAME.sh"
+  fi
+
+  ### Host data directories
+  HOST_DATA_DIR=${ROOT_DATA_DIR}/$COIN_NAME
+  COIND_HOST_DATA_DIR=$HOST_DATA_DIR/coind
+  ELECTRUMX_HOST_DATA_DIR=$HOST_DATA_DIR/electrumx
+
+  ### Coind Settings
+  COIND_CONTAINER_NAME=$COIN_NAME-coind
+  RPC_USER=${COIN_NAME}user
+  RPC_PASSWORD=${COIN_NAME}password
+
+  ### ElectrumX Settings
+  ELECTRUMX_CONTAINER_NAME=$COIN_NAME-electrumx
+  TCP_PORT=$((ELECTRUMX_TCP_BASE_PORT+PORT_OFFSET))
+  SSL_PORT=$((TCP_PORT+ELECTRUMX_SSL_PORT_OFFSET))
+  DAEMON_URL=http://$RPC_USER:$RPC_PASSWORD@$RPC_HOST:$RPC_PORT
+  SERVICES=tcp://:$TCP_PORT,ssl://:$SSL_PORT
+  REPORT_SERVICES=tcp://$DNS:$TCP_PORT,ssl://$DNS:$SSL_PORT
+}

@@ -1,0 +1,269 @@
+#!/bin/bash
+
+###########################################################
+################## Public Swarm Commands ##################
+###########################################################
+
+install() {
+  ### Install Docker if it's never been installed before
+  if [ -z "$ELECTRUMX_IMAGE_INSTALLED" ]; then
+    docker -v >&-
+    if [ $? != 0 ]; then
+      echo -e "\n\nInstalling Docker\n\n"
+      apt-get update
+      apt-get install apt-transport-https ca-certificates curl software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+      add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+      apt-get update
+      apt-get install -y docker-ce
+    fi
+
+    headLine "Pulling the Electrumx image: $ELECTRUMX_IMAGE_NAME"
+    docker pull $ELECTRUMX_IMAGE_NAME
+    ELECTRUMX_IMAGE_INSTALLED=1
+  fi
+
+  createFolders
+
+  headLine "Pulling the coind image for: $COIN"
+  docker pull $COIND_IMAGE_NAME
+}
+
+run() {
+  headLine "Running the servers for: $COIN"
+  ### Run install if needed
+  [ ! -d "$HOST_DATA_DIR" ] && install
+  ### Runs a Coin's custom install script if exists
+  if [ ! -z "$CUSTOM_SCRIPT_PATH" ]; then
+    echo "Running custom script for - $COIN_NAME"
+    . "$CUSTOM_SCRIPT_PATH"
+  fi
+  ### Runs/Start the Containers
+  runCoind
+  runElectrumx
+}
+
+### Stop containers in case they are running
+stop() {
+  headLine "Stopping servers for - $COIN"
+
+  if [ "$(docker ps | grep $COIND_CONTAINER_NAME)" ]; then
+    echo "Trying to stop $COIND_CONTAINER_NAME"
+    echo "Stopped $(docker stop $COIND_CONTAINER_NAME)"
+  else
+    echo "$COIND_CONTAINER_NAME is not running"
+  fi
+
+  if [ "$(docker ps | grep $ELECTRUMX_CONTAINER_NAME)" ]; then
+    echo "Trying to stop $ELECTRUMX_CONTAINER_NAME"
+    echo "Stopped $(docker stop $ELECTRUMX_CONTAINER_NAME)"
+  else
+    echo "$ELECTRUMX_CONTAINER_NAME is not running"
+  fi
+}
+
+### Remove containers in case they exists
+remove() {
+  headLine "Removing servers for - $COIN"
+
+  if [ "$(docker ps -a | grep $COIND_CONTAINER_NAME)" ]; then
+    echo "Trying to remove $COIND_CONTAINER_NAME"
+    echo "Removed $(docker rm -f $COIND_CONTAINER_NAME)"
+  else
+    echo "$COIND_CONTAINER_NAME doesn't exist"
+  fi
+
+  if [ "$(docker ps -a | grep $ELECTRUMX_CONTAINER_NAME)" ]; then
+    echo "Trying to remove $ELECTRUMX_CONTAINER_NAME"
+    echo "Removed $(docker rm -f $ELECTRUMX_CONTAINER_NAME)"
+  else
+    echo "$ELECTRUMX_CONTAINER_NAME doesn't exist"
+  fi
+}
+
+compact() {
+  headLine "Compacting database for - $ELECTRUMX_CONTAINER_NAME"
+
+  ### Stop the current running electrum container
+  docker stop "$ELECTRUMX_CONTAINER_NAME"
+
+  ### Save the current settings
+  CURRENT_ELECTRUMX_IMAGE_BIN="$ELECTRUMX_IMAGE_BIN"
+  CURRENT_ELECTRUMX_CONTAINER_NAME="$ELECTRUMX_CONTAINER_NAME"
+  CURRENT_ELECTRUMX_RESTART_POLICY="$ELECTRUMX_RESTART_POLICY"
+
+  ### Set the container name and bin for 'Compact History'
+  ELECTRUMX_IMAGE_BIN="$ELECTRUMX_COMPACT_BIN"
+  ELECTRUMX_CONTAINER_NAME="$COIN_NAME-electrumx-compact-history"
+  ELECTRUMX_RESTART_POLICY="no"
+
+  ### Run the 'Compact History' container
+  runElectrumx
+
+  ### Track the 'Compact History' container
+  docker logs -f "$ELECTRUMX_CONTAINER_NAME"
+  ### Once it's the 'Compact History' is done, remove it's container
+  docker rm -f "$ELECTRUMX_CONTAINER_NAME"
+
+  ### Set the container name and bin back to normal
+  ELECTRUMX_IMAGE_BIN="$CURRENT_ELECTRUMX_IMAGE_BIN"
+  ELECTRUMX_CONTAINER_NAME="$CURRENT_ELECTRUMX_CONTAINER_NAME"
+  ELECTRUMX_RESTART_POLICY="$CURRENT_ELECTRUMX_RESTART_POLICY"
+
+  ### Start the original electrumx container
+  docker start "$ELECTRUMX_CONTAINER_NAME"
+
+  headLine "Finished compacting database for - $ELECTRUMX_CONTAINER_NAME"
+}
+
+print() {
+  if [ -z "$PRINTED_SHARED" ]; then
+    printSharedSettings
+    PRINTED_SHARED=1
+  fi
+  printCoinSettings
+}
+
+ping() {
+  headLine "Pinging server for - $COIN"
+  ### Get all the Coins Names from the we support
+  echo "Result: $(nc -i 2 -w 2 $DNS $TCP_PORT <<< $PING_MESSAGE)"
+  echo "--------------------------------------------------------------------------------"
+}
+
+###########################################################
+################### Private Functions #####################
+###########################################################
+
+headLine() {
+  echo ""
+  echo "$1"
+  echo "--------------------------------------------------------------------------------"
+}
+
+### Create Host's persistant data folders if needed
+createFolders() {
+  headLine "Creating folders for persistant data for - $COIN_NAME"
+  mkdir -p $ROOT_DATA_DIR
+  mkdir -p $HOST_DATA_DIR
+  mkdir -p $COIND_HOST_DATA_DIR
+  chmod 777 -R $COIND_HOST_DATA_DIR
+  mkdir -p $ELECTRUMX_HOST_DATA_DIR
+  chmod 777 -R $ELECTRUMX_HOST_DATA_DIR
+}
+
+### Start/Create the Coind container only if it's not already running/existing
+runCoind() {
+  if [ ! "$(docker ps -a | grep $COIND_CONTAINER_NAME)" ]; then
+    echo "Running: $COIND_CONTAINER_NAME"
+    docker run -d \
+      --restart $COIND_RESTART_POLICY \
+      --name $COIND_CONTAINER_NAME \
+      -v $COIND_HOST_DATA_DIR:$COIND_IMAGE_DATA_DIR \
+      -p $NETWORK_PORT:$NETWORK_PORT \
+      -p $ELECTRUMX_HOST:$RPC_PORT:$RPC_PORT \
+      --entrypoint $COIND_IMAGE_BIN $COIND_IMAGE_NAME \
+        -rpcallowip=$ELECTRUMX_HOST/0 \
+        -rpcuser=$RPC_USER \
+        -rpcpassword=$RPC_PASSWORD \
+        -server=1 \
+        -disablewallet \
+        -txindex=1 \
+        -printtoconsole
+  elif [ ! "$(docker ps | grep $COIND_CONTAINER_NAME)" ]; then
+    echo "Trying to start: $COIND_CONTAINER_NAME"
+    docker start "$COIND_CONTAINER_NAME"
+  else
+    echo "$COIND_CONTAINER_NAME is already running"
+  fi
+}
+
+### Start/Create the ElectrumX container only if it's not already running/existing
+runElectrumx() {
+  if [ ! "$(docker ps -a | grep $ELECTRUMX_CONTAINER_NAME)" ]; then
+    echo "Running: $ELECTRUMX_CONTAINER_NAME"
+    docker run -d \
+      --net="host" \
+      --restart $ELECTRUMX_RESTART_POLICY \
+      --name $ELECTRUMX_CONTAINER_NAME \
+      -v $ELECTRUMX_HOST_DATA_DIR:$ELECTRUMX_IMAGE_DATA_DIR \
+      -e DAEMON_URL=$DAEMON_URL \
+      -e NET=$NET \
+      -e COIN=$COIN \
+      -e MAX_SESSIONS=$MAX_SESSIONS \
+      -e SERVICES=$SERVICES \
+      -e REPORT_SERVICES=$REPORT_SERVICES \
+      $ELECTRUMX_IMAGE_NAME /bin/sh -c "$ELECTRUMX_IMAGE_BIN"
+  elif [ ! "$(docker ps | grep $ELECTRUMX_CONTAINER_NAME)" ]; then
+    echo "Trying to start: $ELECTRUMX_CONTAINER_NAME"
+    docker start "$ELECTRUMX_CONTAINER_NAME"
+  else
+    echo "$ELECTRUMX_CONTAINER_NAME is already running"
+  fi
+}
+
+printCoinSettings() {
+  echo "
+                            $COIN_NAME Settings:
+--------------------------------------------------------------------------------
+Host:
+  - Coin's Volume: $HOST_DATA_DIR
+  - Custom script path: $CUSTOM_SCRIPT_PATH
+
+Coind:
+  - Container Name: $COIND_CONTAINER_NAME
+  - Image Name: $COIND_IMAGE_NAME
+  - Command: $COIND_IMAGE_BIN
+  - Image's Volume: $COIND_IMAGE_DATA_DIR
+  - Host's Volume: $COIND_HOST_DATA_DIR
+  - Network port: $NETWORK_PORT
+  - RPC port: $RPC_PORT
+  - RPC host: $RPC_HOST
+  - RPC user: $RPC_USER
+  - RPC password: $RPC_PASSWORD
+
+Electrumx:
+  - Container Name: $ELECTRUMX_CONTAINER_NAME
+  - Image Name: $ELECTRUMX_IMAGE_NAME
+  - Command: $ELECTRUMX_IMAGE_BIN
+  - Image's Volume: $ELECTRUMX_IMAGE_DATA_DIR
+  - Host's Volume: $ELECTRUMX_HOST_DATA_DIR
+  - Network type: $NET
+  - Coin: $COIN
+  - Maximum concrrent sessions: $MAX_SESSIONS
+  - Deamon URL: $DAEMON_URL
+  - Host: $ELECTRUMX_HOST
+  - Port Offset: $PORT_OFFSET
+  - TCP port: $TCP_PORT
+  - SSL port: $SSL_PORT
+  - Services: $SERVICES
+  - Reported Services: $REPORT_SERVICES
+--------------------------------------------------------------------------------"
+}
+
+printSharedSettings() {
+  echo "
+                              Shared Settings:
+--------------------------------------------------------------------------------
+Host:
+  - DNS: $DNS
+  - Persistent data root path: $ROOT_DATA_DIR
+  - Coins settings file path: $COINS_CONFIG_PATH
+
+Coind:
+  - The Container Restart Policy: $COIND_RESTART_POLICY
+  - RPC Host: $RPC_HOST
+
+Electrumx:
+  - Image Name: $ELECTRUMX_IMAGE_NAME
+  - Image's Volume: $ELECTRUMX_IMAGE_DATA_DIR
+  - Host: $ELECTRUMX_HOST
+  - Electrumx's GLOBAL base TCP port: $ELECTRUMX_TCP_BASE_PORT
+  - Electrumx's GLOBAL SSL port offset: $ELECTRUMX_SSL_PORT_OFFSET
+  - Electrumx's Compact-History command: $ELECTRUMX_COMPACT_BIN
+  - Container subnet: $ELECTRUMX_CONTAINER_NET
+  - The Container Restart Policy: $ELECTRUMX_RESTART_POLICY
+  - Network Type: $NET
+  - Maximum Concrrent Sessions: $MAX_SESSIONS
+--------------------------------------------------------------------------------"
+}

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+###########################################################
+################## Public Swarm Options ###################
+###########################################################
+
+debug() {
+  set -x
+  ARGS=("${ARGS[@]:1}")
+}
+
+all() {
+  ARGS=("${ARGS[@]:1}" "all")
+}
+
+config() {
+  local customPath="${ARGS[1]}"
+  if [ -z "$customPath" ]; then
+    swarmError $customPath "missing config file path"
+  elif [ ! -f "$customPath" ]; then
+    swarmError $customPath "bad config file path"
+  else
+    ### Set the settings path and shifts the array
+    SHARED_SETTINGS_PATH="$customPath"
+    ARGS=("${ARGS[@]:2}")
+  fi
+}
+
+help() {
+  cat man.txt
+  exit 0
+}

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+### Set the Default Shared Settings path
+SHARED_SETTINGS_PATH="./shared.conf"
+
+### Get the API from the manual file
+PUBLIC_API=$(sed -e '1,/Options:/d' ./man.txt | sed -e '/Examples:/,$d')
+### Get just the Public Commands part
+PUBLIC_COMMANDS=$(echo "$PUBLIC_API" | sed -e '1,/Commands:/d')
+### Get just the Public Options part
+PUBLIC_OPTIONS=$(echo "$PUBLIC_API" | sed -e '/Commands:/,$d')
+
+### Turn the arguments into an array
+ARGS=($*)
+
+### Import the private utility functions
+. ./bin/utils
+
+### Import Public Options
+. ./bin/options
+### Parse and run all the options
+swarmOption "$PUBLIC_OPTIONS"
+
+### Import Public Commands
+. ./bin/commands
+### Parse and run the Command
+swarmCommand "$PUBLIC_COMMANDS"
