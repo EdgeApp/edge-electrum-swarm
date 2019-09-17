@@ -15,7 +15,7 @@ PUBLIC_OPTIONS=$(echo "$PUBLIC_API" | sed -e '/Commands:/,$d')
 ARGS=($*)
 
 ### Import the private utility functions
-. ${LOCAL_DIR}/bin/utils
+. ${LOCAL_DIR}/bin/swarmTools
 
 ### Import Public Options
 . ${LOCAL_DIR}/bin/options
