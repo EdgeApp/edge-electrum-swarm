@@ -5,6 +5,7 @@
 - COINS_CONFIG_PATH
 - COIN_NAME
 - CUSTOM_SCRIPT_PATH
+- CRON_JOB
 
 ## 2. Host's data paths
 - ROOT_DATA_DIR

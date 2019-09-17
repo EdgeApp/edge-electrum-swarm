@@ -34,10 +34,7 @@ run() {
   ### Run install if needed
   [ ! -d "$HOST_DATA_DIR" ] && install
   ### Runs a Coin's custom install script if exists
-  if [ ! -z "$CUSTOM_SCRIPT_PATH" ]; then
-    echo "Running custom script for - $COIN_NAME"
-    . "$CUSTOM_SCRIPT_PATH"
-  fi
+  runCustomScript
   ### Runs/Start the Containers
   runCoind
   runElectrumx
@@ -60,6 +57,8 @@ stop() {
   else
     echo "$ELECTRUMX_CONTAINER_NAME is not running"
   fi
+
+  removeCronTask
 }
 
 ### Remove containers in case they exists
@@ -79,6 +78,8 @@ remove() {
   else
     echo "$ELECTRUMX_CONTAINER_NAME doesn't exist"
   fi
+
+  removeCronTask
 }
 
 compact() {
@@ -152,6 +153,26 @@ createFolders() {
   chmod 777 -R $ELECTRUMX_HOST_DATA_DIR
 }
 
+runCustomScript() {
+  if [ ! -z "$CUSTOM_SCRIPT_PATH" ]; then
+    ### Reset the current cron job
+    echo "Running custom script for - $COIN_NAME"
+    . "$CUSTOM_SCRIPT_PATH"
+    ## If there is a cron job to set, add it to the cron file
+    if [ ! -z "$CRON_JOB" ]; then
+      removeCronTask
+      CURRENT_JOBS=$(crontab -l)
+      CRON_JOBS="${CURRENT_JOBS}\n${CRON_JOB}"
+      echo -e "${CRON_JOBS}" | crontab -
+    fi
+  fi
+}
+
+removeCronTask() {
+  CRON_JOBS=$(sed -e "/$COIN_NAME/d" <<< $(crontab -l))
+  echo -e "${CRON_JOBS}" | crontab -
+}
+
 ### Start/Create the Coind container only if it's not already running/existing
 runCoind() {
   if [ ! "$(docker ps -a | grep $COIND_CONTAINER_NAME)" ]; then
@@ -209,6 +230,7 @@ printCoinSettings() {
 Host:
   - Coin's Volume: $HOST_DATA_DIR
   - Custom script path: $CUSTOM_SCRIPT_PATH
+  - Coins cron job: $CRON_JOB
 
 Coind:
   - Container Name: $COIND_CONTAINER_NAME
