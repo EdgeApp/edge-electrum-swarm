@@ -1,10 +1,11 @@
 #!/bin/bash
+LOCAL_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 
 ### Set the Default Shared Settings path
-SHARED_SETTINGS_PATH="./shared.conf"
+SHARED_SETTINGS_PATH="${LOCAL_DIR}/shared.conf"
 
 ### Get the API from the manual file
-PUBLIC_API=$(sed -e '1,/Options:/d' ./man.txt | sed -e '/Examples:/,$d')
+PUBLIC_API=$(sed -e '1,/Options:/d' ${LOCAL_DIR}/man.txt | sed -e '/Examples:/,$d')
 ### Get just the Public Commands part
 PUBLIC_COMMANDS=$(echo "$PUBLIC_API" | sed -e '1,/Commands:/d')
 ### Get just the Public Options part
@@ -14,14 +15,14 @@ PUBLIC_OPTIONS=$(echo "$PUBLIC_API" | sed -e '/Commands:/,$d')
 ARGS=($*)
 
 ### Import the private utility functions
-. ./bin/utils
+. ${LOCAL_DIR}/bin/utils
 
 ### Import Public Options
-. ./bin/options
+. ${LOCAL_DIR}/bin/options
 ### Parse and run all the options
 swarmOption "$PUBLIC_OPTIONS"
 
 ### Import Public Commands
-. ./bin/commands
+. ${LOCAL_DIR}/bin/commands
 ### Parse and run the Command
 swarmCommand "$PUBLIC_COMMANDS"

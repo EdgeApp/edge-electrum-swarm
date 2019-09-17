@@ -2,6 +2,7 @@
 
 ## 1. General Parameters
 - DNS
+- LOCAL_DIR - The script file location
 - COINS_CONFIG_PATH
 - COIN_NAME
 - CUSTOM_SCRIPT_PATH

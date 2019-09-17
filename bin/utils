@@ -16,7 +16,7 @@ swarmCommand() {
   swarmValidInput "$command" "$availableCommands" "wrong command"
   ### Exit early when asking for 'help'
   if [ "$command" == "help" ]; then
-    cat man.txt
+    cat ${LOCAL_DIR}/man.txt
     exit 0
   fi
   ### Set the shared environment variables
@@ -53,7 +53,7 @@ swarmCommand() {
     swarmError $userCoins "Must supply Coins names or select 'all'"
   fi
 
-  ## Looping over all of the selected Coins
+  ### Looping over all of the selected Coins
   while read -r coin; do
     ### Reset the shared environment variables
     . $SHARED_SETTINGS_PATH
