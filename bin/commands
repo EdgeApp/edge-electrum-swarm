@@ -82,6 +82,12 @@ remove() {
   removeCronTask
 }
 
+### Restarts containers
+restart() {
+  remove
+  run
+}
+
 compact() {
   headLine "Compacting database for - $ELECTRUMX_CONTAINER_NAME"
 

@@ -21,6 +21,7 @@ Commands:
   run       - Starts the servers (Runs install if needed)
   stop      - Stops the servers without deleting the containers
   remove    - Removes the servers containers
+  restart   - Restarts the servers containers
   compact   - Compacts the Electrumx's database to reduce it's size
               in order to avoiding overflows. Be aware that it might
               take a few hours, and that during that time the
