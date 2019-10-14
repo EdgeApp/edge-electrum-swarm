@@ -13,15 +13,63 @@ all() {
   ARGS=("${ARGS[@]:1}" "all")
 }
 
-config() {
+dns() {
+  local dns="${ARGS[1]}"
+  if [ -z "$dns" ]; then
+    swarmError $dns "missing DNS param"
+  else
+    ### Set the DNS param and shifts the array
+    DNS="$dns"
+    ARGS=("${ARGS[@]:2}")
+  fi
+}
+
+data() {
   local customPath="${ARGS[1]}"
   if [ -z "$customPath" ]; then
-    swarmError $customPath "missing config file path"
-  elif [ ! -f "$customPath" ]; then
-    swarmError $customPath "bad config file path"
+    swarmError $customPath "missing data directory path"
   else
-    ### Set the settings path and shifts the array
-    SHARED_SETTINGS_PATH="$customPath"
+    ### Set the data directory path and shifts the array
+    ROOT_DATA_DIR="$customPath"
+    ARGS=("${ARGS[@]:2}")
+  fi
+}
+
+coins() {
+  local customPath="${ARGS[1]}"
+  if [ -z "$customPath" ]; then
+    swarmError $customPath "missing coins config file path"
+  elif [ ! -f "$customPath" ]; then
+    swarmError $customPath "bad coins config file path"
+  else
+    ### Set the coins settings path and shifts the array
+    COINS_CONFIG_PATH="$customPath"
+    ARGS=("${ARGS[@]:2}")
+  fi
+}
+
+deamon() {
+  local customPath="${ARGS[1]}"
+  if [ -z "$customPath" ]; then
+    swarmError $customPath "missing coin deamon config file path"
+  elif [ ! -f "$customPath" ]; then
+    swarmError $customPath "bad coin deamon config file path"
+  else
+    ### Set the coin deamon settings path and shifts the array
+    COIN_DEAMON_CONFIG_PATH="$customPath"
+    ARGS=("${ARGS[@]:2}")
+  fi
+}
+
+electrumx() {
+  local customPath="${ARGS[1]}"
+  if [ -z "$customPath" ]; then
+    swarmError $customPath "missing electrumx config file path"
+  elif [ ! -f "$customPath" ]; then
+    swarmError $customPath "bad electrumx config file path"
+  else
+    ### Set the electrumx settings path and shifts the array
+    ELECTRUMX_CONFIG_PATH="$customPath"
     ARGS=("${ARGS[@]:2}")
   fi
 }

@@ -19,8 +19,7 @@ swarmCommand() {
     cat ${LOCAL_DIR}/man.txt
     exit 0
   fi
-  ### Set the shared environment variables
-  . $SHARED_SETTINGS_PATH
+
   ### Exit if we are missing the Coins config file
   if [ ! -f "$COINS_CONFIG_PATH" ]; then
     swarmError $COINS_CONFIG_PATH "missing coins config file"
@@ -55,8 +54,6 @@ swarmCommand() {
 
   ### Looping over all of the selected Coins
   while read -r coin; do
-    ### Reset the shared environment variables
-    . $SHARED_SETTINGS_PATH
     ### Get the coin's settings
     local settings=$(grep "$coin" <<< "$coinsSettings")
     ### Set the coin's environment variables
@@ -109,28 +106,34 @@ swarmSetEnvironment() {
   ### Get the Coin's name in lowercase
   COIN_NAME=$(echo $COIN | awk '{print tolower($0)}')
 
-  ### Check for an existing custom script if an explicit one wasn't specified
-  if [ -z "$CUSTOM_SCRIPT_PATH"     ] && \
-    [ -d "$CUSTOM_SCRIPTS_FOLDER"         ] && \
-    [ -f "$CUSTOM_SCRIPTS_FOLDER/$COIN_NAME.sh" ]; then
-    CUSTOM_SCRIPT_PATH="$CUSTOM_SCRIPTS_FOLDER/$COIN_NAME.sh"
-  fi
-
   ### Host data directories
   HOST_DATA_DIR=${ROOT_DATA_DIR}/$COIN_NAME
   COIND_HOST_DATA_DIR=$HOST_DATA_DIR/coind
   ELECTRUMX_HOST_DATA_DIR=$HOST_DATA_DIR/electrumx
 
-  ### Coind Settings
+  ### Set the shared Coind settings
+  . $COIN_DEAMON_CONFIG_PATH
+
+  ### Set the Coin's Coind Settings
   COIND_CONTAINER_NAME=$COIN_NAME-coind
   RPC_USER=${COIN_NAME}user
   RPC_PASSWORD=${COIN_NAME}password
 
-  ### ElectrumX Settings
+  ### Set the shared Electrumx settings
+  . $ELECTRUMX_CONFIG_PATH
+
+  ### Set the Coin's Electrumx settings
   ELECTRUMX_CONTAINER_NAME=$COIN_NAME-electrumx
   TCP_PORT=$((ELECTRUMX_TCP_BASE_PORT+PORT_OFFSET))
   SSL_PORT=$((TCP_PORT+ELECTRUMX_SSL_PORT_OFFSET))
   DAEMON_URL=http://$RPC_USER:$RPC_PASSWORD@$RPC_HOST:$RPC_PORT
   SERVICES=tcp://:$TCP_PORT,ssl://:$SSL_PORT
   REPORT_SERVICES=tcp://$DNS:$TCP_PORT,ssl://$DNS:$SSL_PORT
+
+  ### Check for an existing custom script if an explicit one wasn't specified
+  if [ -z "$CUSTOM_SCRIPT_PATH"     ] && \
+    [ -d "$CUSTOM_SCRIPTS_DIR"         ] && \
+    [ -f "$CUSTOM_SCRIPTS_DIR/$COIN_NAME.sh" ]; then
+    CUSTOM_SCRIPT_PATH="$CUSTOM_SCRIPTS_DIR/$COIN_NAME.sh"
+  fi
 }

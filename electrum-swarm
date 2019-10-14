@@ -1,8 +1,24 @@
 #!/bin/bash
 LOCAL_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 
-### Set the Default Shared Settings path
-SHARED_SETTINGS_PATH="${LOCAL_DIR}/shared.conf"
+### Set the Default scripts folder
+CUSTOM_SCRIPTS_DIR="${LOCAL_DIR}/coin-scripts"
+### Set the Default configuration files folder
+CONFIG_DIR="${LOCAL_DIR}/config"
+### Set the Default coins config file path
+COINS_CONFIG_PATH="${CONFIG_DIR}/coins.conf"
+### Set the Default coindeamon config file path
+COIN_DEAMON_CONFIG_PATH="${CONFIG_DIR}/coindeamon.conf"
+### Set the Default electrumx config file path
+ELECTRUMX_CONFIG_PATH="${CONFIG_DIR}/electrumx.conf"
+
+### Load the Default host's configuration
+. "${CONFIG_DIR}/host.conf"
+### Try and load the local host's custom settings
+CUSTOM_HOST_SETTING_PATH="${LOCAL_DIR}/local.conf"
+if [ -f "$CUSTOM_HOST_SETTING_PATH" ]; then
+  . $CUSTOM_HOST_SETTING_PATH
+fi
 
 ### Get the API from the manual file
 PUBLIC_API=$(sed -e '1,/Options:/d' ${LOCAL_DIR}/man.txt | sed -e '/Examples:/,$d')

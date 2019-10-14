@@ -10,8 +10,15 @@ COIN - An optional list of Coins Names (case insensitive)
 
 Options:
       --all                Select all Coins
-      --config string      Location of custom config files
-                           Defaults to "./shared.conf"
+      --dns string         The DNS to use
+      --data string        Path for data persistence
+                           Defaults to "/datadrive"
+      --coins string       Coins config file path
+                           Defaults to "./config/coins.conf"
+      --deamon string      Coind config file path
+                           Defaults to "./config/coindeamon.conf"
+      --electrumx string   Electrumx config file path
+                           Defaults to "./config/electrumX.conf"
       --debug              Enable debug mode
       --help               Displays this text
 
@@ -32,6 +39,6 @@ Commands:
 
 Examples:
   1. 'electrum-swarm stop Dogecoin'
-  2. 'electrum-swarm --config ./settings.conf run Dogecoin Vertcoin'
-  3. 'electrum-swarm --all --config ./settings.conf ping'
+  2. 'electrum-swarm --electrumx ~/electrumxNew.conf run Dogecoin Vertcoin'
+  3. 'electrum-swarm --all --coins ./customCoins.conf ping'
   4. 'electrum-swarm print all'
