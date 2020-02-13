@@ -38,6 +38,8 @@ run() {
   ### Runs/Start the Containers
   runCoind
   runElectrumx
+  ### Set the cron task
+  setCronTask
 }
 
 ### Stop containers in case they are running
@@ -164,13 +166,16 @@ runCustomScript() {
     ### Reset the current cron job
     echo "Running custom script for - $COIN_NAME"
     . "$CUSTOM_SCRIPT_PATH"
-    ## If there is a cron job to set, add it to the cron file
-    if [ ! -z "$CRON_JOB" ]; then
-      removeCronTask
-      CURRENT_JOBS=$(crontab -l)
-      CRON_JOBS="${CURRENT_JOBS}\n${CRON_JOB}"
-      echo -e "${CRON_JOBS}" | crontab -
-    fi
+  fi
+}
+
+setCronTask() {
+  ## If there is a cron job to set, add it to the cron file
+  if [ ! -z "$CRON_JOB" ]; then
+    removeCronTask
+    CURRENT_JOBS=$(crontab -l)
+    CRON_JOBS="${CURRENT_JOBS}\n${CRON_JOB}"
+    echo -e "${CRON_JOBS}" | crontab -
   fi
 }
 

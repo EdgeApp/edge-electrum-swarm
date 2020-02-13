@@ -101,7 +101,6 @@ swarmSetEnvironment() {
   NETWORK_PORT="${coinSettings[5]}"
   RPC_PORT="${coinSettings[6]}"
   CUSTOM_SCRIPT_PATH="${coinSettings[7]}"
-  CRON_JOB=""
 
   ### Get the Coin's name in lowercase
   COIN_NAME=$(echo $COIN | awk '{print tolower($0)}')
@@ -136,4 +135,8 @@ swarmSetEnvironment() {
     [ -f "$CUSTOM_SCRIPTS_DIR/$COIN_NAME.sh" ]; then
     CUSTOM_SCRIPT_PATH="$CUSTOM_SCRIPTS_DIR/$COIN_NAME.sh"
   fi
+
+  ### Set the history-compaction cron job
+  local cron_offset="${PORT_OFFSET:0:1}"
+  CRON_JOB="0 ${cron_offset} * * * sudo ${LOCAL_DIR}/electrum-swarm compact ${COIN_NAME}"
 }
