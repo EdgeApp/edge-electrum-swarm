@@ -19,6 +19,9 @@ Options:
                            Defaults to "./config/coindeamon.conf"
       --electrumx string   Electrumx config file path
                            Defaults to "./config/electrumX.conf"
+      --autoupdate number  Automatic update interval in minutes (0 for off)
+                           Defaults to once every 30 minutes
+                           Used only with update
       --debug              Enable debug mode
       --help               Displays this text
 

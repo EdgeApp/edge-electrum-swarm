@@ -74,6 +74,17 @@ electrumx() {
   fi
 }
 
+autoupdate() {
+  local autoupdate="${ARGS[1]}"
+  if [ -z "$autoupdate" ]; then
+    swarmError $autoupdate "missing autoupdate interval"
+  else
+    ### Set the AUTO_UPDATE param and shifts the array
+    AUTO_UPDATE="$autoupdate"
+    ARGS=("${ARGS[@]:2}")
+  fi
+}
+
 help() {
   cat ${LOCAL_DIR}/man.txt
   exit 0

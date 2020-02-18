@@ -105,6 +105,17 @@ update() {
     echo "This is the latest version. No need to update."
   fi
 
+  ### Set the cron job for automatic updating
+  CRON_JOB="*/${AUTO_UPDATE} * * * * sudo ${LOCAL_DIR}/electrum-swarm update"
+  ### When searching for a cron job, we use COIN_NAME as the query term
+  COIN_NAME="electrum-swarm update"
+  ### We want to save the update logs directly to the ROOT_DATA_DIR
+  HOST_DATA_DIR="${ROOT_DATA_DIR}"
+  if [ "$AUTO_UPDATE" == "0" ]; then
+    removeCronTask
+  else
+    setCronTask
+  fi
 
   exit 0
 }
@@ -301,6 +312,7 @@ Host:
   - DNS: $DNS
   - Persistent data root path: $ROOT_DATA_DIR
   - Coins settings file path: $COINS_CONFIG_PATH
+  - AUTO_UPDATE: $AUTO_UPDATE
 
 Coind:
   - The Container Restart Policy: $COIND_RESTART_POLICY
