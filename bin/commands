@@ -90,6 +90,25 @@ restart() {
   run
 }
 
+### Update this electrum-swarm tool if the remote repo has changed
+update() {
+  ### Move to the repo directory
+  cd "${LOCAL_DIR}"
+  ### If remote master has changes, pull it and restart all container
+  if [ ! -z "$(git diff origin/master)" ]; then
+    echo "Updating electrum-swarm to latest version."
+    git pull origin master
+    ### Turn electrum-swarm into executable in case pulling changed it
+    chmod u+x "${LOCAL_DIR}/electrum-swarm"
+    sudo "${LOCAL_DIR}/electrum-swarm" restart all
+  else
+    echo "This is the latest version. No need to update."
+  fi
+
+
+  exit 0
+}
+
 compact() {
   headLine "Compacting database for - $ELECTRUMX_CONTAINER_NAME"
 

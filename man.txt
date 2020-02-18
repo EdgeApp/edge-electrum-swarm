@@ -35,6 +35,7 @@ Commands:
               ElectrumX server won't be availble
   ping      - Checks if the Electrumx's TCP connection is alive
   print     - Prints the settings (Shared and Coin)
+  update    - Updates electrum-swarm and restart the running containers
   help      - Displays this text
 
 Examples:

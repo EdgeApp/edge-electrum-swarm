@@ -14,10 +14,9 @@ swarmCommand() {
   local userCoins="${ARGS[@]}"
   ### Exit if the command asked by the user is invalid
   swarmValidInput "$command" "$availableCommands" "wrong command"
-  ### Exit early when asking for 'help'
-  if [ "$command" == "help" ]; then
-    cat ${LOCAL_DIR}/man.txt
-    exit 0
+  ### First try commands withouts params
+  if [ "$command" == "help" ] || [ "$command" == "update" ]; then
+    $command
   fi
 
   ### Exit if we are missing the Coins config file
