@@ -75,7 +75,6 @@ electrumx() {
 }
 
 help() {
-  echo $LOCAL_DIR
   cat ${LOCAL_DIR}/man.txt
   exit 0
 }

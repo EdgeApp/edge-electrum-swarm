@@ -193,7 +193,7 @@ setCronTask() {
   if [ ! -z "$CRON_JOB" ]; then
     removeCronTask
     CURRENT_JOBS=$(crontab -l)
-    CRON_JOBS="${CURRENT_JOBS}\n${CRON_JOB}"
+    CRON_JOBS="${CURRENT_JOBS}\n${CRON_JOB} >> ${HOST_DATA_DIR}/cron.log 2>&1"
     echo -e "${CRON_JOBS}" | crontab -
   fi
 }
