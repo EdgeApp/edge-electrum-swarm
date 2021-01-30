@@ -136,6 +136,7 @@ swarmSetEnvironment() {
   fi
 
   ### Set the history-compaction cron job
-  local cron_offset="${PORT_OFFSET:0:1}"
+  local time_offset="${PORT_OFFSET:0:1}"
+  local cron_offset=$((TIME_OFFSET + time_offset))
   CRON_JOB="0 ${cron_offset} * * * sudo ${LOCAL_DIR}/electrum-swarm compact ${COIN_NAME}"
 }
