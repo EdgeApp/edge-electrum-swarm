@@ -42,6 +42,10 @@ run() {
   setCronTask
 }
 
+start() {
+  run
+}
+
 ### Stop containers in case they are running
 stop() {
   headLine "Stopping servers for - $COIN"

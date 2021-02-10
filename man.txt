@@ -29,6 +29,7 @@ Commands:
   install   - If needed, Install docker, download all the docker images
               and create the Host's persistent data folders
   run       - Starts the servers (Runs install if needed)
+  start     - Starts the servers (Runs install if needed)
   stop      - Stops the servers without deleting the containers
   remove    - Removes the servers containers
   restart   - Restarts the servers containers
