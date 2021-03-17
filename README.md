@@ -23,6 +23,7 @@
 - NETWORK_PORT - The coin's p2p network port
 - RPC_HOST
 - RPC_PORT - The RPC port for the coind
+- RPC_AUTH
 - RPC_USER
 - RPC_PASSWORD
 

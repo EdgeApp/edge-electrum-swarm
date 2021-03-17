@@ -116,6 +116,7 @@ swarmSetEnvironment() {
   COIND_CONTAINER_NAME=$COIN_NAME-coind
   RPC_USER=${COIN_NAME}user
   RPC_PASSWORD=${COIN_NAME}password
+  RPC_AUTH=$(python3 $LOCAL_DIR/rpcauth.py $RPC_USER $RPC_PASSWORD)
 
   ### Set the shared Electrumx settings
   . $ELECTRUMX_CONFIG_PATH

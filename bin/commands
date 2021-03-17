@@ -230,8 +230,7 @@ runCoind() {
       -p $ELECTRUMX_HOST:$RPC_PORT:$RPC_PORT \
       --entrypoint $COIND_IMAGE_BIN $COIND_IMAGE_NAME \
         -rpcallowip=$ELECTRUMX_HOST/0 \
-        -rpcuser=$RPC_USER \
-        -rpcpassword=$RPC_PASSWORD \
+        -rpcauth=$RPC_AUTH \
         -server=1 \
         -disablewallet \
         -txindex=1 \
@@ -286,6 +285,7 @@ Coind:
   - Network port: $NETWORK_PORT
   - RPC port: $RPC_PORT
   - RPC host: $RPC_HOST
+  - RPC auth: $RPC_AUTH
   - RPC user: $RPC_USER
   - RPC password: $RPC_PASSWORD
 
