@@ -90,6 +90,7 @@ remove() {
 
 ### Restarts containers
 restart() {
+  stop
   remove
   run
 }
