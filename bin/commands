@@ -162,6 +162,29 @@ compact() {
   headLine "Finished compacting database for - $ELECTRUMX_CONTAINER_NAME"
 }
 
+backup() {
+  headLine "Creating backup for - $COIN"
+  ### Backup only works if there is a logged in docker user on the local host
+  if [ ! -z "$LOCAL_DOCKER_USER" ]; then
+    cd "${LOCAL_DIR}"
+    ### Stop the servers before creating a snapshot
+    stop
+    ### Create a snapshot image
+    echo "Prepering the snapshot..."
+    cp ./auxiliary/Dockerfile $HOST_DATA_DIR/Dockerfile
+    cd $HOST_DATA_DIR
+    docker build --tag $LOCAL_DOCKER_USER/$DATA_SNAPSHOT .
+    rm ./Dockerfile
+    ### Start the servers once the snapshot is ready
+    start
+    ### Upload the snapshot and removing it from local host
+    echo "Backing up the snapshot..."
+    docker push $LOCAL_DOCKER_USER/$DATA_SNAPSHOT
+    echo "Removing the local snapshot..."
+    docker rmi $LOCAL_DOCKER_USER/$DATA_SNAPSHOT
+  fi
+  headLine "Finished backup for - $COIN"
+}
 print() {
   if [ -z "$PRINTED_SHARED" ]; then
     printSharedSettings

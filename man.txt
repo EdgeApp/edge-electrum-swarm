@@ -37,6 +37,8 @@ Commands:
               in order to avoiding overflows. Be aware that it might
               take a few hours, and that during that time the
               ElectrumX server won't be availble
+  backup    - Creates a docker image that contains a snapshot of the datadrive
+              and publish it to docker hub
   ping      - Checks if the Electrumx's TCP connection is alive
   print     - Prints the settings (Shared and Coin)
   update    - Updates electrum-swarm and restart the running containers
