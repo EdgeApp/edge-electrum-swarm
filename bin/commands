@@ -5,24 +5,41 @@
 ###########################################################
 
 install() {
-  ### Install Docker and jq if it's a fresh installation
-  if [ -z "$ELECTRUMX_IMAGE_INSTALLED" ]; then
+  ### Install tools and jq if it's a fresh installation
+  if [ -z "$INSTALLED_DEPENDENCIES" ]; then
     docker -v >&-
     if [ $? != 0 ]; then
       echo -e "\n\nInstalling Docker\n\n"
+      ### Install basic tooling
       apt-get update
-      apt-get install apt-transport-https ca-certificates curl software-properties-common
+      apt-get install -y \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        software-properties-common \
+        jq \
+        pass
+
+      ### Install docker-ce
       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
       add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
       apt-get update
       apt-get install -y docker-ce
+
+      ### Install docker-credential-pass
+      wget https://github.com/docker/docker-credential-helpers/releases/download/v0.6.0/docker-credential-pass-v0.6.0-amd64.tar.gz
+      tar -xf docker-credential-pass-v0.6.0-amd64.tar.gz
+      chmod +x docker-credential-pass
+      mv docker-credential-pass /usr/local/bin/
+      sed -i '0,/{/s/{/{\n\t"credsStore": "pass",/' ~/.docker/config.json
+
+      ### Update at the end just in case
       apt-get update
-      apt-get install -y jq
     fi
 
     headLine "Pulling the Electrumx image: $ELECTRUMX_IMAGE_NAME"
     docker pull $ELECTRUMX_IMAGE_NAME
-    ELECTRUMX_IMAGE_INSTALLED=1
+    INSTALLED_DEPENDENCIES=1
   fi
 
   createFolders
