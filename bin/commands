@@ -26,7 +26,7 @@ install() {
   fi
 
   createFolders
-
+  restore
   headLine "Pulling the coind image for: $COIN"
   docker pull $COIND_IMAGE_NAME
 }
@@ -185,6 +185,35 @@ backup() {
   fi
   headLine "Finished backup for - $COIN"
 }
+
+restore() {
+  headLine "Restoring from backup for - $COIN"
+  ### If there is no logged in docker user on the host, pull the default snapshots
+  local dockerUser="$SNAPSHOTS_DOCKER_USER"
+  if [ ! -z "$LOCAL_DOCKER_USER" ]; then
+    dockerUser="$LOCAL_DOCKER_USER"
+  fi
+  ### Pull and run the latest snapshot
+  echo "Pulling the snapshot..."
+  docker pull $dockerUser/$DATA_SNAPSHOT
+  echo "Running the snapshot..."
+  local containerName="$COIN_NAME"Snapshot
+  docker run -it -d --name $containerName $dockerUser/$DATA_SNAPSHOT sh
+  ### Stop the servers before trying to restore
+  stop
+  echo "Restoring from snapshot..."
+  docker cp $containerName:/data/. $HOST_DATA_DIR/
+  rm $HOST_DATA_DIR/Dockerfile
+  echo "Stoping the snapshot..."
+  docker stop $containerName
+  echo "Removing the snapshot..."
+  docker rm $containerName
+  docker rmi -f $dockerUser/$DATA_SNAPSHOT
+  ### Start the servers after the restoration is done
+  start
+  headLine "Finished restoring from backup for - $COIN"
+}
+
 print() {
   if [ -z "$PRINTED_SHARED" ]; then
     printSharedSettings

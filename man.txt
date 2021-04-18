@@ -39,6 +39,7 @@ Commands:
               ElectrumX server won't be availble
   backup    - Creates a docker image that contains a snapshot of the datadrive
               and publish it to docker hub
+  restore   - Gets a snapshot of the datadrive from docker hub and set it localy
   ping      - Checks if the Electrumx's TCP connection is alive
   print     - Prints the settings (Shared and Coin)
   update    - Updates electrum-swarm and restart the running containers
