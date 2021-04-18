@@ -135,6 +135,20 @@ swarmSetEnvironment() {
     CUSTOM_SCRIPT_PATH="$CUSTOM_SCRIPTS_DIR/$COIN_NAME.sh"
   fi
 
+  ### Set the current logged in docker user
+  local credStore=$(jq -r .credsStore ~/.docker/config.json)
+  if [ "$credStore" != "null" ]; then
+    local credList=$(docker-credential-$credStore list)
+    LOCAL_DOCKER_USER=$(echo $credList | jq -r '. |
+      to_entries[] |
+      select(.key |
+      contains("docker.io")) |
+      last(.value)')
+  fi
+
+  ### Set the snapshot image name
+  DATA_SNAPSHOT=$COIN_NAME-snapshot:latest
+
   ### Set the history-compaction cron job
   local time_offset="${PORT_OFFSET:0:1}"
   local cron_offset=$((TIME_OFFSET + time_offset))

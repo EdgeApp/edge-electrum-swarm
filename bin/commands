@@ -5,7 +5,7 @@
 ###########################################################
 
 install() {
-  ### Install Docker if it's never been installed before
+  ### Install Docker and jq if it's a fresh installation
   if [ -z "$ELECTRUMX_IMAGE_INSTALLED" ]; then
     docker -v >&-
     if [ $? != 0 ]; then
@@ -16,6 +16,8 @@ install() {
       add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
       apt-get update
       apt-get install -y docker-ce
+      apt-get update
+      apt-get install -y jq
     fi
 
     headLine "Pulling the Electrumx image: $ELECTRUMX_IMAGE_NAME"
@@ -318,7 +320,10 @@ Host:
   - DNS: $DNS
   - Persistent data root path: $ROOT_DATA_DIR
   - Coins settings file path: $COINS_CONFIG_PATH
-  - AUTO_UPDATE: $AUTO_UPDATE
+  - Time interval for automatic updates: $AUTO_UPDATE
+  - Compaction time offset: $TIME_OFFSET
+  - The current local Docker user: $LOCAL_DOCKER_USER
+  - The Default Docker user for pulling/pushing snapshots: $SNAPSHOTS_DOCKER_USER
 
 Coind:
   - The Container Restart Policy: $COIND_RESTART_POLICY
