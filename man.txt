@@ -39,6 +39,12 @@ Commands:
               ElectrumX server won't be availble
   backup    - Creates a docker image that contains a snapshot of the datadrive
               and publish it to docker hub
+              Follow this guide to setup backup:
+              https://github.com/docker/docker-credential-helpers/issues/102
+              Those steps 'should' work after the initial install:
+              1. gpg2 --gen-key
+              2. pass init "<Your Name>"
+              3. docker login
   restore   - Gets a snapshot of the datadrive from docker hub and set it localy
   ping      - Checks if the Electrumx's TCP connection is alive
   print     - Prints the settings (Shared and Coin)
