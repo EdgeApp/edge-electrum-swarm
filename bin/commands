@@ -233,11 +233,13 @@ runCoind() {
         -rpcallowip=$ELECTRUMX_HOST/0 \
         -rpcuser=$RPC_USER \
         -rpcpassword=$RPC_PASSWORD \
-        -rpcbind=0.0.0.0 \
-        -server=1 \
-        -disablewallet \
-        -txindex=1 \
-        -printtoconsole
+        -mempoolexpiry=$MEM_POOL_EXPIRY \
+        -maxmempool=$MAX_MEM_POOL \
+        -rpcbind=$RPC_BIND \
+        -server=$SERVER \
+        -disablewallet=$DISABLE_WALLET \
+        -txindex=$TX_INDEX \
+        -printtoconsole=$PRINT_TO_CONSOLE
   elif [ ! "$(docker ps | grep $COIND_CONTAINER_NAME)" ]; then
     echo "Trying to start: $COIND_CONTAINER_NAME"
     docker start "$COIND_CONTAINER_NAME"
