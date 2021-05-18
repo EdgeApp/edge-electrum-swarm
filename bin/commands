@@ -233,6 +233,8 @@ runCoind() {
         -rpcallowip=$ELECTRUMX_HOST/0 \
         -rpcuser=$RPC_USER \
         -rpcpassword=$RPC_PASSWORD \
+        -mempoolexpiry=$MEM_POOL_EXPIRY \
+        -maxmempool=$MAX_MEM_POOL \
         -rpcbind=$RPC_BIND \
         -server=$SERVER \
         -disablewallet=$DISABLE_WALLET \
