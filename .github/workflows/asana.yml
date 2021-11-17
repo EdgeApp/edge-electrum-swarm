@@ -1,35 +1,20 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Asana
+name: Asana-Attachment
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+    types: [opened, reopened]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  create-asana-attachment-job:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    name: Create pull request attachments on Asana tasks
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      - name: Attach pull request to Asana task
-        # You may pin to the exact commit or the version.
-        # uses: Asana/create-app-attachment-github-action@d7a1d53c5e95a102e4a5c77d43dd6d8e261d5522
+      - name: Create pull request attachments
         uses: Asana/create-app-attachment-github-action@latest
+        id: postAttachment
         with:
-          # The Asana secret for the action. Read more about how to generate this secret at https://github.com/Asana/create-app-attachment-github-action#step-2-set-up-a-repository-secret-for-the-secret-token
           asana-secret: ${{ secrets.ASANA_SECRET }}
-        
+      - name: Log output status
+        run: echo "Status is ${{ steps.postAttachment.outputs.status }}"
